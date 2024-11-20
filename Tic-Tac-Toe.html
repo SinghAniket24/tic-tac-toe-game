@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe Game</title>
+    <!-- Font Awesome CDN link -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #222;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+            color: #fff;
+        }
+
+        .game-title {
+            font-size: 2.5rem;
+            color: #4caf50;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .game-title i {
+            margin-right: 10px;
+            font-size: 2.5rem;
+        }
+
+        .game-container {
+            background-color: #333;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            width: 480px;
+            max-width: 90%;
+            position: relative;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            padding: 10px;
+            border-radius: 12px;
+        }
+
+        .cell {
+            width: 120px;
+            height: 120px;
+            background-color: #555;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background-color 0.3s, transform 0.2s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .cell:hover {
+            background-color: #666;
+            transform: scale(1.05);
+        }
+
+        .cell.taken {
+            pointer-events: none;
+        }
+
+        #game-info {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        #turn {
+            color: #4caf50;
+        }
+
+        .reset-btn {
+            padding: 10px 20px;
+            background-color: #2196f3;
+            border: none;
+            color: white;
+            font-size: 1.1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .reset-btn:hover {
+            background-color: #1976d2;
+        }
+
+        .reset-btn:active {
+            background-color: #1565c0;
+        }
+
+        .turn-indicator {
+            margin-top: 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        footer {
+            margin-top: 30px;
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        footer a {
+            color: #4caf50;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 480px) {
+            .game-container {
+                padding: 20px;
+                width: 100%;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .cell {
+                width: 80px;
+                height: 80px;
+                font-size: 1.5rem;
+            }
+
+            .reset-btn {
+                padding: 8px 16px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-title">
+        <!-- Font Awesome Gamepad Icon -->
+        <i class="fas fa-gamepad"></i>
+        <h1>Tic-Tac-Toe</h1>
+    </div>
+
+    <div class="game-container">
+        <div id="game-board" class="board">
+            <div class="cell" data-index="0"></div>
+            <div class="cell" data-index="1"></div>
+            <div class="cell" data-index="2"></div>
+            <div class="cell" data-index="3"></div>
+            <div class="cell" data-index="4"></div>
+            <div class="cell" data-index="5"></div>
+            <div class="cell" data-index="6"></div>
+            <div class="cell" data-index="7"></div>
+            <div class="cell" data-index="8"></div>
+        </div>
+        <div class="turn-indicator">
+            <p id="turn">Player X's turn</p>
+        </div>
+    </div>
+
+    <button id="reset" class="reset-btn">Reset Game</button>
+
+    <footer>
+        <p>Made by <a href="https://github.com/singhaniket24" target="_blank">Aniket Singh</a></p>
+    </footer>
+
+    <script>
+        const board = document.getElementById('game-board');
+        const cells = document.querySelectorAll('.cell');
+        const turnDisplay = document.getElementById('turn');
+        const resetButton = document.getElementById('reset');
+
+        let currentPlayer = 'X';
+        let gameBoard = ['', '', '', '', '', '', '', '', ''];
+        let gameActive = true;
+        let winningCells = [];
+
+        // Win conditions
+        const winConditions = [
+            [0, 1, 2],
+            [3, 4, 5],
+            [6, 7, 8],
+            [0, 3, 6],
+            [1, 4, 7],
+            [2, 5, 8],
+            [0, 4, 8],
+            [2, 4, 6]
+        ];
+
+        // Function to check for a win
+        function checkWinner() {
+            for (let condition of winConditions) {
+                const [a, b, c] = condition;
+                if (gameBoard[a] && gameBoard[a] === gameBoard[b] && gameBoard[a] === gameBoard[c]) {
+                    winningCells = condition;
+                    highlightWinningCells();
+                    setTimeout(() => {
+                        alert(`${gameBoard[a]} wins!`);
+                    }, 100);
+                    gameActive = false;
+                    return;
+                }
+            }
+
+            if (!gameBoard.includes('')) {
+                setTimeout(() => {
+                    alert("It's a draw!");
+                }, 100);
+                gameActive = false;
+            }
+        }
+
+        // Function to handle cell click
+        function handleCellClick(e) {
+            const index = e.target.dataset.index;
+
+            if (gameBoard[index] || !gameActive) return;
+
+            gameBoard[index] = currentPlayer;
+            e.target.textContent = currentPlayer;
+            e.target.classList.add('taken');
+            
+            checkWinner();
+
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            turnDisplay.textContent = `Player ${currentPlayer}'s turn`;
+        }
+
+        // Function to highlight winning cells
+        function highlightWinningCells() {
+            winningCells.forEach(index => {
+                const cell = cells[index];
+                if (gameBoard[index] === 'X') {
+                    cell.style.backgroundColor = '#FF5722'; // Red color for X
+                } else if (gameBoard[index] === 'O') {
+                    cell.style.backgroundColor = '#2196F3'; // Blue color for O
+                }
+            });
+        }
+
+        // Function to reset the game
+        function resetGame() {
+            gameBoard = ['', '', '', '', '', '', '', '', ''];
+            gameActive = true;
+            currentPlayer = 'X';
+            turnDisplay.textContent = `Player ${currentPlayer}'s turn`;
+            winningCells = [];
+
+            cells.forEach(cell => {
+                cell.textContent = '';
+                cell.classList.remove('taken');
+                cell.style.backgroundColor = '#555'; // Reset color
+            });
+        }
+
+        // Event Listeners
+        cells.forEach(cell => cell.addEventListener('click', handleCellClick));
+        resetButton.addEventListener('click', resetGame);
+    </script>
+</body>
+</html>
