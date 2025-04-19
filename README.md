@@ -11,3 +11,6 @@ Winning combination highlight and alert popup
 Reset button to replay the game
 
 Responsive design and modern UI with Font Awesome icons
+
+Preview link
+[Tic-tac toe] (https://singhaniket24.github.io/tic-tac-toe-game/Tic-Tac-Toe.html)
